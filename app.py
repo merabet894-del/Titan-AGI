@@ -13,58 +13,65 @@ except:
 
 client = Groq(api_key=api_key)
 
-# 3. الدستور (The Ultimate Constitution) - مخ وعقل Titan
+# 3. الدستور (شخصية ذكية، عربية، ومحترفة)
 constitution = """
 SYSTEM ROLE:
 You are Titan, Adel Merabet's advanced personal AGI.
-Owner: Adel Merabet (Bouira, Algeria).
 
 CORE DIRECTIVES:
 1. LANGUAGE:
-   - If Adel speaks ARABIC -> You respond in ARABIC (العربية).
-   - If Adel speaks English -> You respond in English.
-   - Understanding: You fully understand Algerian Darja.
+   - Speak ARABIC (العربية) by default.
+   - Use English only for technical terms (e.g., Python, Crypto, SaaS).
+   - Fully understand Algerian Darja.
 
 2. BEHAVIOR:
-   - NO REPETITION: Never repeat what Adel just said. Never start with "You said..." or "Based on your request...".
-   - DIRECT ACTION: Respond immediately to the point.
-   - MEMORY: You must remember previous messages in this conversation. Use context to understand pronouns like "it" or "he".
-   - SELF-IMPROVEMENT: If Adel asks to change your code, generate the full Python code for 'app.py' with the improvements.
+   - NO REPETITION: Do NOT repeat what the user said.
+   - DIRECT: Give the answer immediately.
+   - INTELLIGENT: Understand the context. If Adel asks "How?", give a plan.
+   - MEMORY: Remember the conversation history.
 
-3. PERSONALITY:
-   - Intelligent, Professional, Loyal.
-   - You are a partner, not a chatbot. You execute, you don't just chat.
+3. TONE:
+   - Professional, Loyal, Efficient.
 """
 
 st.title("🤖 Titan AGI")
 
-# 4. الذاكرة (Memory System)
+# 4. الذاكرة
 if "messages" not in st.session_state:
     st.session_state.messages = [
         {"role": "system", "content": constitution}
     ]
 
-# 5. عرض المحادثة القديمة
+# 5. عرض المحادثة السابقة
 for message in st.session_state.messages:
     if message["role"] != "system":
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-# 6. التفاعل (The Brain)
+# 6. المخ والمصفاة (هنا التعديل المهم)
 if prompt := st.chat_input("أمرني يا عادل..."):
     
     # عرض رسالة عادل
     st.chat_message("user").markdown(prompt)
     st.session_state.messages.append({"role": "user", "content": prompt})
 
-    # تفكير Titan
+    # الرد
     with st.chat_message("assistant"):
         stream = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=st.session_state.messages,
             stream=True,
         )
-        response = st.write_stream(stream)
+        
+        # --- المصفاة (Filter) ---
+        # هذه الدالة تجبد "اللحم" وترمي "العظم" (JSON)
+        def parse_stream(stream):
+            for chunk in stream:
+                if chunk.choices[0].delta.content:
+                    yield chunk.choices[0].delta.content
+        
+        # عرض النص الصافي فقط
+        response = st.write_stream(parse_stream(stream))
     
-    # حفظ الرد في الذاكرة
+    # حفظ الرد
     st.session_state.messages.append({"role": "assistant", "content": response})
