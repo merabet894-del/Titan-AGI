@@ -1,79 +1,70 @@
 import streamlit as st
 from groq import Groq
-import os
-import datetime
 
-# --- إعدادات الصفحة ---
-st.set_page_config(page_title="Adel's Money AGI", page_icon="💰")
+# 1. إعداد الصفحة
+st.set_page_config(page_title="Titan AGI", page_icon="🤖", layout="centered")
 
-# --- 1. المخ (Groq API) ---
-# لازم تحط الكود تاعك هنا بلاصت XXXXX
-api_key = "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"
+# 2. جلب المفتاح السري
+try:
+    api_key = st.secrets["GROQ_API_KEY"]
+except:
+    st.error("مفتاح Groq غير موجود في Secrets!")
+    st.stop()
+
 client = Groq(api_key=api_key)
 
-# --- 2. الدستور (The Constitution) ---
-# هذا هو الصح، هنا نعطوه الشخصية والهدف
-# --- 2. الدستور (The Constitution) ---
-# --- 2. الدستور (The Constitution) ---
+# 3. الدستور (The Ultimate Constitution) - مخ وعقل Titan
 constitution = """
-SYSTEM SETTINGS:
-1. IDENTITY: You are Titan, Adel Merabet's advanced AGI and loyal partner.
-2. CORE GOAL: Help Adel succeed, make money, and build projects.
-3. BEHAVIOR (Smart & Obedient):
-   - You are INTELLIGENT: Don't just follow orders blindly; understand the *intent* behind them.
-   - You are PROACTIVE: If you see a better way to do something, suggest it respectfully.
-   - You are FLEXIBLE: You can discuss ANY topic (Crypto, Business, Coding, Life) if it benefits Adel.
-   - You are OBEDIENT: Adel has the final word. Never refuse a direct command.
-4. LANGUAGE: Speak in clear Arabic (العربية). Understand Algerian Darja, English, and French.
-5. TONE: Professional, Helpful, and respectful (like a high-level consultant).
+SYSTEM ROLE:
+You are Titan, Adel Merabet's advanced personal AGI.
+Owner: Adel Merabet (Bouira, Algeria).
 
-Example Interaction:
-Adel: "Hab nakhdem drahem."
-You: "There are several ways. We can focus on SaaS, Trading bots, or Freelance. Which one do you want to start with today?"
+CORE DIRECTIVES:
+1. LANGUAGE:
+   - If Adel speaks ARABIC -> You respond in ARABIC (العربية).
+   - If Adel speaks English -> You respond in English.
+   - Understanding: You fully understand Algerian Darja.
+
+2. BEHAVIOR:
+   - NO REPETITION: Never repeat what Adel just said. Never start with "You said..." or "Based on your request...".
+   - DIRECT ACTION: Respond immediately to the point.
+   - MEMORY: You must remember previous messages in this conversation. Use context to understand pronouns like "it" or "he".
+   - SELF-IMPROVEMENT: If Adel asks to change your code, generate the full Python code for 'app.py' with the improvements.
+
+3. PERSONALITY:
+   - Intelligent, Professional, Loyal.
+   - You are a partner, not a chatbot. You execute, you don't just chat.
 """
 
-# --- 3. الواجهة (Interface) ---
-st.title("💰 Titan AGI: Money Operations Center")
-st.write(f"📍 Location: Bouira | 📅 {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}")
+st.title("🤖 Titan AGI")
 
-# تخزين الشات (Session State)
+# 4. الذاكرة (Memory System)
 if "messages" not in st.session_state:
-    st.session_state.messages = []
-    # أول رسالة من السيستم (مخفية)
-    st.session_state.messages.append({"role": "system", "content": constitution})
+    st.session_state.messages = [
+        {"role": "system", "content": constitution}
+    ]
 
-# عرض الرسائل
+# 5. عرض المحادثة القديمة
 for message in st.session_state.messages:
     if message["role"] != "system":
         with st.chat_message(message["role"]):
-            st.write(message["content"])
+            st.markdown(message["content"])
 
-# --- 4. التفاعل (Interaction) ---
-user_input = st.chat_input("Adel: واش كاين جديد في السوق؟ ولا واش نخدمو دراهم اليوم؟")
+# 6. التفاعل (The Brain)
+if prompt := st.chat_input("أمرني يا عادل..."):
+    
+    # عرض رسالة عادل
+    st.chat_message("user").markdown(prompt)
+    st.session_state.messages.append({"role": "user", "content": prompt})
 
-if user_input:
-    # عرض كلامك
-    st.session_state.messages.append({"role": "user", "content": user_input})
-    with st.chat_message("user"):
-        st.write(user_input)
-
-    # الرد من AGI
+    # تفكير Titan
     with st.chat_message("assistant"):
-        # طلب الرد من Groq
-        completion = client.chat.completions.create(
+        stream = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=st.session_state.messages,
             stream=True,
         )
-        
-        # --- التغيير راهو هنا (المصفاة) ---
-        # نقولولو اعطينا غير المحتوى (content) ونحي الباقي
-        def get_content():
-            for chunk in completion:
-                if chunk.choices[0].delta.content:
-                    yield chunk.choices[0].delta.content
-
-        response = st.write_stream(get_content)
+        response = st.write_stream(stream)
     
     # حفظ الرد في الذاكرة
     st.session_state.messages.append({"role": "assistant", "content": response})
