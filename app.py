@@ -54,11 +54,21 @@ if user_input:
 
     # الرد من AGI
     with st.chat_message("assistant"):
-        stream = client.chat.completions.create(
-            model="llama-3.3-70b-versatile", # موديل قوي جداً
+        # طلب الرد من Groq
+        completion = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
             messages=st.session_state.messages,
             stream=True,
         )
-        response = st.write_stream(stream)
+        
+        # --- التغيير راهو هنا (المصفاة) ---
+        # نقولولو اعطينا غير المحتوى (content) ونحي الباقي
+        def get_content():
+            for chunk in completion:
+                if chunk.choices[0].delta.content:
+                    yield chunk.choices[0].delta.content
+
+        response = st.write_stream(get_content)
     
+    # حفظ الرد في الذاكرة
     st.session_state.messages.append({"role": "assistant", "content": response})
